@@ -1,9 +1,12 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Note
+from .forms import NoteForm, ContactForm
 
 # Create your views here.
 def notes_list(request):
-    pass
+    notes = Note.objects.all()
+
+    return render(request, "notes/notes_list.html", {"notes": notes})
 
 
 def notes_detail(request, pk):
@@ -75,3 +78,18 @@ def add_note(request, pk):
             return redirect(to='list_contacts')
 
     return render(request, "notes/add_note.html", {"form": form, "note": note})
+
+
+
+
+def contact_us(request):
+    if request.method == "GET":
+        form = ContactForm()
+
+    else:
+        form = ContactForm(data=request.POST)
+
+        respond_email = form.cleaned_data['email']
+        message_body = form.cleaned_data['body']
+
+        # Email the user that their message was received and email the admin the user's message
