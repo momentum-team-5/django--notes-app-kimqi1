@@ -1,6 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.messages import success, error
 from .models import Note
 from .forms import NoteForm, ContactForm
+
 
 # Create your views here.
 def notes_list(request):
@@ -10,86 +12,57 @@ def notes_list(request):
 
 
 def notes_detail(request, pk):
-    note = get_object_or_404(Contact, pk=pk)
-    note = Note.objects.filter(contact=contact)
+    note = get_object_or_404(Note, pk=pk)
 
-    if note:
-        note = note[0]
-
-    else:
-        note = None
-
-    return render(request, "contacts/detail_contact.html", {"contact": contact, "note": note})
+    return render(request, "notes/notes_detail.html", {"note": note})
 
 
+# The following three view functions use NoteForm and ContactForm
 def add_note(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         form = NoteForm()
 
     else:
         form = NoteForm(data=request.POST)
+
         if form.is_valid():
             form.save()
-            return redirect(to='list_contacts')
+            success(request, "Note added!")
+            redirect(to="notes_list")
+
+        else:
+            error(request, "Could not add note :( .")
 
     return render(request, "notes/add_note.html", {"form": form})
 
 
 def edit_note(request, pk):
-    note = get_object_or_404(Contact, pk=pk)
-    if request.method == 'GET':
+    note = get_object_or_404(Note, pk=pk)
+    
+    if request.method == "GET":
         form = NoteForm(instance=note)
+
     else:
         form = NoteForm(data=request.POST, instance=note)
+
         if form.is_valid():
             form.save()
-            return redirect(to='notes_list')
+            success(request, "Note updated!")
+            redirect(to="notes_list")
 
-    return render(request, "notes/edit_note.html", {
-        "form": form,
-        "contact": contact
-    })
+        else:
+            error(request, "Could not update note :( .")
+
+    return render(request, "notes/edit_note.html", {"form": form})
 
 
 def delete_note(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
-    if request.method == 'POST':
-        contact.delete()
-        return redirect(to='notes_list')
+    note = get_object_or_404(Note, pk=pk)
+    note.delete()
+    success(request, "Note deleted!")
 
-    return render(request, "notes/delete_note.html",
-                  {"note": note})
-
-
-def add_note(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
-
-    if request.method == 'GET':
-        form = NoteForm()
-
-    else:
-        form = NoteForm(data=request.POST)
-
-        if form.is_valid():
-            note = form.save(commit=False)
-            note.notes = note
-
-            note.save()
-            return redirect(to='list_contacts')
-
-    return render(request, "notes/add_note.html", {"form": form, "note": note})
-
-
+    return redirect(to="notes_list")
 
 
 def contact_us(request):
-    if request.method == "GET":
-        form = ContactForm()
-
-    else:
-        form = ContactForm(data=request.POST)
-
-        respond_email = form.cleaned_data['email']
-        message_body = form.cleaned_data['body']
-
-        # Email the user that their message was received and email the admin the user's message
+    return redirect(to="notes_list")
